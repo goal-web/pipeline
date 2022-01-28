@@ -44,6 +44,15 @@ func TestPipeline(t *testing.T) {
 		Then(func(user User) {
 			fmt.Println("then", user)
 		})
+	/* 
+	=== RUN   TestPipeline
+	中间件1-start
+	中间件2-start
+	then {1 goal}
+	中间件2-end
+	中间件1-end
+	--- PASS: TestPipeline (0.00s)
+	*/
 }
 
 // TestPipelineException 测试异常情况
