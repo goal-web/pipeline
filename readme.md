@@ -8,6 +8,8 @@ go get github.com/goal-web/pipeline
 ```
 
 ## 使用 - usage
+得益于 goal 强大的容器，你可以在管道(pipe)和目的地(destination)任意注入容器中存在的实例
+> 对管道不熟悉的同学，可以把 pipe 理解为中间件，destination 就是控制器方法
 ```go
 package tests
 
