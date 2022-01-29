@@ -10,12 +10,14 @@ go get github.com/goal-web/pipeline
 ## 使用 - usage
 得益于 goal 强大的容器，你可以在管道(pipe)和目的地(destination)任意注入容器中存在的实例
 > 对管道不熟悉的同学，可以把 pipe 理解为中间件，destination 就是控制器方法
+> 
 ```go
 package tests
 
 import (
 	"fmt"
 	"github.com/goal-web/container"
+	"github.com/goal-web/contracts"
 	"github.com/goal-web/pipeline"
 	"github.com/pkg/errors"
 	"testing"
@@ -46,15 +48,6 @@ func TestPipeline(t *testing.T) {
 		Then(func(user User) {
 			fmt.Println("then", user)
 		})
-	/* 
-	=== RUN   TestPipeline
-	中间件1-start
-	中间件2-start
-	then {1 goal}
-	中间件2-end
-	中间件1-end
-	--- PASS: TestPipeline (0.00s)
-	*/
 }
 
 // TestPipelineException 测试异常情况
@@ -83,6 +76,43 @@ func TestPipelineException(t *testing.T) {
 		})
 }
 
+// TestStaticPipeline 测试调用magical函数
+func TestStaticPipeline(t *testing.T) {
+	// 应用启动时就准备好的中间件和控制器函数，在大量并发时用 StaticPipeline 可以提高性能
+	middlewares := []contracts.MagicalFunc{
+		container.NewMagicalFunc(func(user User, next pipeline.Pipe) interface{} {
+			fmt.Println("中间件1-start")
+			result := next(user)
+			fmt.Println("中间件1-end", result)
+			return result
+		}),
+		container.NewMagicalFunc(func(user User, next pipeline.Pipe) interface{} {
+			fmt.Println("中间件2-start")
+			result := next(user)
+			fmt.Println("中间件2-end", result)
+			return result
+		}),
+	}
+	controller := container.NewMagicalFunc(func(user User) int {
+		fmt.Println("then", user)
+		return user.Id
+	})
+
+	pipe := pipeline.Static(container.New())
+	result := pipe.SendStatic(User{Id: 1, Name: "goal"}).
+		ThroughStatic(middlewares...).
+		ThenStatic(controller)
+
+	fmt.Println("穿梭结果", result)
+	/**
+	中间件1-start
+	中间件2-start
+	then {1 goal}
+	中间件2-end [1]
+	中间件1-end [1]
+	穿梭结果 [1]
+	 */
+}
 ```
 
 ### 在 goal 之外的框架使用 - use in frameworks other than goal

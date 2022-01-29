@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/goal-web/container v0.1.4
-	github.com/goal-web/contracts v0.1.22
+	github.com/goal-web/contracts v0.1.23
 )
 
 require (

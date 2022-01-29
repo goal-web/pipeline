@@ -3,6 +3,7 @@ package tests
 import (
 	"fmt"
 	"github.com/goal-web/container"
+	"github.com/goal-web/contracts"
 	"github.com/goal-web/pipeline"
 	"github.com/pkg/errors"
 	"testing"
@@ -59,4 +60,34 @@ func TestPipelineException(t *testing.T) {
 		Then(func(user User) {
 			panic(errors.New("报个错"))
 		})
+}
+
+// TestStaticPipeline 测试调用magical函数
+func TestStaticPipeline(t *testing.T) {
+	// 应用启动时就准备好的中间件和控制器函数，在大量并发时用 StaticPipeline 可以提高性能
+	middlewares := []contracts.MagicalFunc{
+		container.NewMagicalFunc(func(user User, next pipeline.Pipe) interface{} {
+			fmt.Println("中间件1-start")
+			result := next(user)
+			fmt.Println("中间件1-end", result)
+			return result
+		}),
+		container.NewMagicalFunc(func(user User, next pipeline.Pipe) interface{} {
+			fmt.Println("中间件2-start")
+			result := next(user)
+			fmt.Println("中间件2-end", result)
+			return result
+		}),
+	}
+	controller := container.NewMagicalFunc(func(user User) int {
+		fmt.Println("then", user)
+		return user.Id
+	})
+
+	pipe := pipeline.Static(container.New())
+	result := pipe.SendStatic(User{Id: 1, Name: "goal"}).
+		ThroughStatic(middlewares...).
+		ThenStatic(controller)
+
+	fmt.Println("穿梭结果", result)
 }
