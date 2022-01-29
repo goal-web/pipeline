@@ -58,8 +58,7 @@ func (this *Pipeline) carry() Callback {
 	}
 }
 
-func (this *Pipeline) ArrayReduce(pipes []contracts.MagicalFunc, callback Callback, initial Pipe) Pipe {
-	var current = initial
+func (this *Pipeline) ArrayReduce(pipes []contracts.MagicalFunc, callback Callback, current Pipe) Pipe {
 	for _, magicalFunc := range pipes {
 		current = callback(current, magicalFunc)
 	}
