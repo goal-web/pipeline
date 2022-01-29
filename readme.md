@@ -113,6 +113,41 @@ func TestStaticPipeline(t *testing.T) {
 	穿梭结果 [1]
 	 */
 }
+
+// TestPurePipeline 测试纯净的 pipeline
+func TestPurePipeline(t *testing.T) {
+	// 如果你的应用场景对性能要求极高，不希望反射影响你，那么你可以试试下面这个纯净的管道
+	pipe := pipeline.Pure()
+	result := pipe.SendPure(User{Id: 1, Name: "goal"}).
+		ThroughPure(
+			func(user interface{}, next pipeline.Pipe) interface{} {
+				fmt.Println("中间件1-start")
+				result := next(user)
+				fmt.Println("中间件1-end", result)
+				return result
+			},
+			func(user interface{}, next pipeline.Pipe) interface{} {
+				fmt.Println("中间件2-start")
+				result := next(user)
+				fmt.Println("中间件2-end", result)
+				return result
+			},
+		).
+		ThenPure(func(user interface{}) interface{} {
+			fmt.Println("then", user)
+			return user.(User).Id
+		})
+	fmt.Println("穿梭结果", result)
+	/**
+	中间件1-start
+	中间件2-start
+	then {1 goal}
+	中间件2-end 1
+	中间件1-end 1
+	穿梭结果 1
+	 */
+}
+
 ```
 
 ### 在 goal 之外的框架使用 - use in frameworks other than goal
