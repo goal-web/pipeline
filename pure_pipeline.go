@@ -79,11 +79,9 @@ func (this *PurePipeline) reversePipes() []NextFunc {
 }
 
 func (this *PurePipeline) prepareDestination(destination interface{}) Pipe {
-	return func(passable interface{}) interface{} {
-		pipe, isPipeFunc := destination.(Pipe)
-		if !isPipeFunc {
-			panic(PipeArgumentError)
-		}
-		return pipe(passable)
+	pipe, isPipeFunc := destination.(Pipe)
+	if !isPipeFunc {
+		panic(PipeArgumentError)
 	}
+	return pipe
 }
