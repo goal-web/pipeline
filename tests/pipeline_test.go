@@ -16,7 +16,7 @@ type User struct {
 
 func TestPipeline(t *testing.T) {
 	pipe := pipeline.New(container.New())
-	pipe.Send(User{Id: 1, Name: "goal"}).
+	result := pipe.Send(User{Id: 1, Name: "goal"}).
 		Through(
 			func(user User, next pipeline.Pipe) interface{} {
 				fmt.Println("中间件1-start")
@@ -31,9 +31,20 @@ func TestPipeline(t *testing.T) {
 				return result
 			},
 		).
-		Then(func(user User) {
+		Then(func(user User) interface{} {
 			fmt.Println("then", user)
+			return user.Id
 		})
+
+	fmt.Println("穿梭结果：", result)
+	/**
+	中间件1-start
+	中间件2-start
+	then {1 goal}
+	中间件2-end
+	中间件1-end
+	穿梭结果： 1
+	*/
 }
 
 // TestPipelineException 测试异常情况
@@ -60,6 +71,10 @@ func TestPipelineException(t *testing.T) {
 		Then(func(user User) {
 			panic(errors.New("报个错"))
 		})
+	/**
+	中间件1-start
+	中间件2-start
+	*/
 }
 
 // TestStaticPipeline 测试调用magical函数
@@ -90,6 +105,20 @@ func TestStaticPipeline(t *testing.T) {
 		ThenStatic(controller)
 
 	fmt.Println("穿梭结果", result)
+
+	pipe = pipeline.Static(container.New())
+	result = pipe.SendStatic(User{Id: 1, Name: "goal"}).
+		ThroughStatic(middlewares...).
+		ThenStatic(controller)
+	fmt.Println("穿梭结果", result)
+	/**
+	中间件1-start
+	中间件2-start
+	then {1 goal}
+	中间件2-end 1
+	中间件1-end 1
+	穿梭结果 1
+	*/
 }
 
 // TestPurePipeline 测试纯净的 pipeline
@@ -116,4 +145,12 @@ func TestPurePipeline(t *testing.T) {
 			return user.(User).Id
 		})
 	fmt.Println("穿梭结果", result)
+	/**
+	中间件1-start
+	中间件2-start
+	then {1 goal}
+	中间件2-end 1
+	中间件1-end 1
+	穿梭结果 1
+	*/
 }

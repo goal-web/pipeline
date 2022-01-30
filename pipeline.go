@@ -73,11 +73,14 @@ func (this *Pipeline) reversePipes() []contracts.MagicalFunc {
 }
 
 func (this *Pipeline) prepareDestination(destination interface{}) Pipe {
+	pipe, isStaticFunc := destination.(contracts.MagicalFunc)
+	if !isStaticFunc {
+		pipe = container.NewMagicalFunc(destination)
+	}
+	if pipe.NumOut() != 1 {
+		panic(PipeArgumentError)
+	}
 	return func(passable interface{}) interface{} {
-		pipe, isStaticFunc := destination.(contracts.MagicalFunc)
-		if !isStaticFunc {
-			pipe = container.NewMagicalFunc(destination)
-		}
-		return this.container.StaticCall(pipe, passable)
+		return this.container.StaticCall(pipe, passable)[0]
 	}
 }
