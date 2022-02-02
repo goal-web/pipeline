@@ -108,9 +108,9 @@ func TestStaticPipeline(t *testing.T) {
 	中间件1-start
 	中间件2-start
 	then {1 goal}
-	中间件2-end [1]
-	中间件1-end [1]
-	穿梭结果 [1]
+	中间件2-end 1
+	中间件1-end 1
+	穿梭结果 1
 	 */
 }
 
