@@ -16,8 +16,7 @@ type Pipeline struct {
 
 var PipeArgumentError = errors.New("pipe parameters must have a return value")
 
-type Callback func(stack Pipe, next contracts.MagicalFunc) Pipe
-type Pipe func(passable interface{}) interface{}
+type Callback func(stack contracts.Pipe, next contracts.MagicalFunc) contracts.Pipe
 
 func New(container contracts.Container) contracts.Pipeline {
 	return &Pipeline{
@@ -51,14 +50,14 @@ func (this *Pipeline) Then(destination interface{}) interface{} {
 }
 
 func (this *Pipeline) carry() Callback {
-	return func(stack Pipe, next contracts.MagicalFunc) Pipe {
+	return func(stack contracts.Pipe, next contracts.MagicalFunc) contracts.Pipe {
 		return func(passable interface{}) interface{} {
 			return this.container.StaticCall(next, passable, stack)[0]
 		}
 	}
 }
 
-func (this *Pipeline) ArrayReduce(pipes []contracts.MagicalFunc, callback Callback, current Pipe) Pipe {
+func (this *Pipeline) ArrayReduce(pipes []contracts.MagicalFunc, callback Callback, current contracts.Pipe) contracts.Pipe {
 	for _, magicalFunc := range pipes {
 		current = callback(current, magicalFunc)
 	}
@@ -72,7 +71,7 @@ func (this *Pipeline) reversePipes() []contracts.MagicalFunc {
 	return this.pipes
 }
 
-func (this *Pipeline) prepareDestination(destination interface{}) Pipe {
+func (this *Pipeline) prepareDestination(destination interface{}) contracts.Pipe {
 	pipe, isStaticFunc := destination.(contracts.MagicalFunc)
 	if !isStaticFunc {
 		pipe = container.NewMagicalFunc(destination)

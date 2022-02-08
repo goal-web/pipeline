@@ -61,14 +61,14 @@ func (this *StaticPipeline) ThenStatic(destination contracts.MagicalFunc) interf
 }
 
 func (this *StaticPipeline) carry() Callback {
-	return func(stack Pipe, next contracts.MagicalFunc) Pipe {
+	return func(stack contracts.Pipe, next contracts.MagicalFunc) contracts.Pipe {
 		return func(passable interface{}) interface{} {
 			return this.container.StaticCall(next, passable, stack)[0]
 		}
 	}
 }
 
-func (this *StaticPipeline) ArrayReduce(pipes []contracts.MagicalFunc, callback Callback, current Pipe) Pipe {
+func (this *StaticPipeline) ArrayReduce(pipes []contracts.MagicalFunc, callback Callback, current contracts.Pipe) contracts.Pipe {
 	for _, magicalFunc := range pipes {
 		current = callback(current, magicalFunc)
 	}
@@ -82,7 +82,7 @@ func (this *StaticPipeline) reversePipes() []contracts.MagicalFunc {
 	return this.pipes
 }
 
-func (this *StaticPipeline) prepareDestination(destination interface{}) Pipe {
+func (this *StaticPipeline) prepareDestination(destination interface{}) contracts.Pipe {
 	pipe, isStaticFunc := destination.(contracts.MagicalFunc)
 	if !isStaticFunc {
 		pipe = container.NewMagicalFunc(destination)
@@ -95,7 +95,7 @@ func (this *StaticPipeline) prepareDestination(destination interface{}) Pipe {
 	}
 }
 
-func (this *StaticPipeline) prepareStaticDestination(destination contracts.MagicalFunc) Pipe {
+func (this *StaticPipeline) prepareStaticDestination(destination contracts.MagicalFunc) contracts.Pipe {
 	if destination.NumOut() != 1 {
 		panic(PipeArgumentError)
 	}

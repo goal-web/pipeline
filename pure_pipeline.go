@@ -10,8 +10,8 @@ type PurePipeline struct {
 	pipes []NextFunc
 }
 
-type PureCallback func(stack Pipe, next NextFunc) Pipe
-type NextFunc func(passable interface{}, pipe Pipe) interface{}
+type PureCallback func(stack contracts.Pipe, next NextFunc) contracts.Pipe
+type NextFunc func(passable interface{}, pipe contracts.Pipe) interface{}
 type PureDestination func(passable interface{}) interface{}
 
 func Pure() *PurePipeline {
@@ -50,21 +50,21 @@ func (this *PurePipeline) Then(destination interface{}) interface{} {
 	)(this.passable)
 }
 
-func (this *PurePipeline) ThenPure(destination Pipe) interface{} {
+func (this *PurePipeline) ThenPure(destination contracts.Pipe) interface{} {
 	return this.ArrayReduce(
 		this.reversePipes(), this.carry(), destination,
 	)(this.passable)
 }
 
 func (this *PurePipeline) carry() PureCallback {
-	return func(stack Pipe, next NextFunc) Pipe {
+	return func(stack contracts.Pipe, next NextFunc) contracts.Pipe {
 		return func(passable interface{}) interface{} {
 			return next(passable, stack)
 		}
 	}
 }
 
-func (this *PurePipeline) ArrayReduce(pipes []NextFunc, callback PureCallback, current Pipe) Pipe {
+func (this *PurePipeline) ArrayReduce(pipes []NextFunc, callback PureCallback, current contracts.Pipe) contracts.Pipe {
 	for _, magicalFunc := range pipes {
 		current = callback(current, magicalFunc)
 	}
@@ -78,8 +78,8 @@ func (this *PurePipeline) reversePipes() []NextFunc {
 	return this.pipes
 }
 
-func (this *PurePipeline) prepareDestination(destination interface{}) Pipe {
-	pipe, isPipeFunc := destination.(Pipe)
+func (this *PurePipeline) prepareDestination(destination interface{}) contracts.Pipe {
+	pipe, isPipeFunc := destination.(contracts.Pipe)
 	if !isPipeFunc {
 		panic(PipeArgumentError)
 	}
