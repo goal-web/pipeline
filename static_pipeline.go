@@ -8,7 +8,7 @@ import (
 type StaticPipeline struct {
 	container contracts.Container
 
-	passable interface{}
+	passable any
 
 	pipes []contracts.MagicalFunc
 }
@@ -19,17 +19,17 @@ func Static(container contracts.Container) *StaticPipeline {
 	}
 }
 
-func (this *StaticPipeline) Send(passable interface{}) contracts.Pipeline {
-	this.passable = passable
-	return this
+func (pipeline *StaticPipeline) Send(passable any) contracts.Pipeline {
+	pipeline.passable = passable
+	return pipeline
 }
 
-func (this *StaticPipeline) SendStatic(passable interface{}) *StaticPipeline {
-	this.passable = passable
-	return this
+func (pipeline *StaticPipeline) SendStatic(passable any) *StaticPipeline {
+	pipeline.passable = passable
+	return pipeline
 }
 
-func (this *StaticPipeline) Through(pipes ...interface{}) contracts.Pipeline {
+func (pipeline *StaticPipeline) Through(pipes ...any) contracts.Pipeline {
 	for _, item := range pipes {
 		pipe, isStaticFunc := item.(contracts.MagicalFunc)
 		if !isStaticFunc {
@@ -38,51 +38,51 @@ func (this *StaticPipeline) Through(pipes ...interface{}) contracts.Pipeline {
 		if pipe.NumOut() != 1 {
 			panic(PipeArgumentError)
 		}
-		this.pipes = append(this.pipes, pipe)
+		pipeline.pipes = append(pipeline.pipes, pipe)
 	}
-	return this
+	return pipeline
 }
 
-func (this *StaticPipeline) ThroughStatic(pipes ...contracts.MagicalFunc) *StaticPipeline {
-	this.pipes = append(this.pipes, pipes...)
-	return this
+func (pipeline *StaticPipeline) ThroughStatic(pipes ...contracts.MagicalFunc) *StaticPipeline {
+	pipeline.pipes = append(pipeline.pipes, pipes...)
+	return pipeline
 }
 
-func (this *StaticPipeline) Then(destination interface{}) interface{} {
-	return this.ArrayReduce(
-		this.reversePipes(), this.carry(), this.prepareDestination(destination),
-	)(this.passable)
+func (pipeline *StaticPipeline) Then(destination any) any {
+	return pipeline.ArrayReduce(
+		pipeline.reversePipes(), pipeline.carry(), pipeline.prepareDestination(destination),
+	)(pipeline.passable)
 }
 
-func (this *StaticPipeline) ThenStatic(destination contracts.MagicalFunc) interface{} {
-	return this.ArrayReduce(
-		this.reversePipes(), this.carry(), this.prepareStaticDestination(destination),
-	)(this.passable)
+func (pipeline *StaticPipeline) ThenStatic(destination contracts.MagicalFunc) any {
+	return pipeline.ArrayReduce(
+		pipeline.reversePipes(), pipeline.carry(), pipeline.prepareStaticDestination(destination),
+	)(pipeline.passable)
 }
 
-func (this *StaticPipeline) carry() Callback {
+func (pipeline *StaticPipeline) carry() Callback {
 	return func(stack contracts.Pipe, next contracts.MagicalFunc) contracts.Pipe {
-		return func(passable interface{}) interface{} {
-			return this.container.StaticCall(next, passable, stack)[0]
+		return func(passable any) any {
+			return pipeline.container.StaticCall(next, passable, stack)[0]
 		}
 	}
 }
 
-func (this *StaticPipeline) ArrayReduce(pipes []contracts.MagicalFunc, callback Callback, current contracts.Pipe) contracts.Pipe {
+func (pipeline *StaticPipeline) ArrayReduce(pipes []contracts.MagicalFunc, callback Callback, current contracts.Pipe) contracts.Pipe {
 	for _, magicalFunc := range pipes {
 		current = callback(current, magicalFunc)
 	}
 	return current
 }
 
-func (this *StaticPipeline) reversePipes() []contracts.MagicalFunc {
-	for from, to := 0, len(this.pipes)-1; from < to; from, to = from+1, to-1 {
-		this.pipes[from], this.pipes[to] = this.pipes[to], this.pipes[from]
+func (pipeline *StaticPipeline) reversePipes() []contracts.MagicalFunc {
+	for from, to := 0, len(pipeline.pipes)-1; from < to; from, to = from+1, to-1 {
+		pipeline.pipes[from], pipeline.pipes[to] = pipeline.pipes[to], pipeline.pipes[from]
 	}
-	return this.pipes
+	return pipeline.pipes
 }
 
-func (this *StaticPipeline) prepareDestination(destination interface{}) contracts.Pipe {
+func (pipeline *StaticPipeline) prepareDestination(destination any) contracts.Pipe {
 	pipe, isStaticFunc := destination.(contracts.MagicalFunc)
 	if !isStaticFunc {
 		pipe = container.NewMagicalFunc(destination)
@@ -90,16 +90,16 @@ func (this *StaticPipeline) prepareDestination(destination interface{}) contract
 	if pipe.NumOut() != 1 {
 		panic(PipeArgumentError)
 	}
-	return func(passable interface{}) interface{} {
-		return this.container.StaticCall(pipe, passable)[0]
+	return func(passable any) any {
+		return pipeline.container.StaticCall(pipe, passable)[0]
 	}
 }
 
-func (this *StaticPipeline) prepareStaticDestination(destination contracts.MagicalFunc) contracts.Pipe {
+func (pipeline *StaticPipeline) prepareStaticDestination(destination contracts.MagicalFunc) contracts.Pipe {
 	if destination.NumOut() != 1 {
 		panic(PipeArgumentError)
 	}
-	return func(passable interface{}) interface{} {
-		return this.container.StaticCall(destination, passable)[0]
+	return func(passable any) any {
+		return pipeline.container.StaticCall(destination, passable)[0]
 	}
 }

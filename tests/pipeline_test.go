@@ -18,20 +18,26 @@ func TestPipeline(t *testing.T) {
 	pipe := pipeline.New(container.New())
 	result := pipe.Send(User{Id: 1, Name: "goal"}).
 		Through(
-			func(user User, next contracts.Pipe) interface{} {
+			func(user User, next contracts.Pipe) any {
 				fmt.Println("中间件1-start")
 				result := next(user)
 				fmt.Println("中间件1-end")
 				return result
 			},
-			func(user User, next contracts.Pipe) interface{} {
+			func(user User, next contracts.Pipe) any {
 				fmt.Println("中间件2-start")
 				result := next(user)
 				fmt.Println("中间件2-end")
 				return result
 			},
+			func(user User, next contracts.Pipe) any {
+				fmt.Println("中间件3-start")
+				result := next(user)
+				fmt.Println("中间件3-end")
+				return result
+			},
 		).
-		Then(func(user User) interface{} {
+		Then(func(user User) any {
 			fmt.Println("then", user)
 			return user.Id
 		})
@@ -55,13 +61,13 @@ func TestPipelineException(t *testing.T) {
 	pipe := pipeline.New(container.New())
 	pipe.Send(User{Id: 1, Name: "goal"}).
 		Through(
-			func(user User, next contracts.Pipe) interface{} {
+			func(user User, next contracts.Pipe) any {
 				fmt.Println("中间件1-start")
 				result := next(user)
 				fmt.Println("中间件1-end", result)
 				return result
 			},
-			func(user User, next contracts.Pipe) interface{} {
+			func(user User, next contracts.Pipe) any {
 				fmt.Println("中间件2-start")
 				result := next(user)
 				fmt.Println("中间件2-end", result)
@@ -81,13 +87,13 @@ func TestPipelineException(t *testing.T) {
 func TestStaticPipeline(t *testing.T) {
 	// 应用启动时就准备好的中间件和控制器函数，在大量并发时用 StaticPipeline 可以提高性能
 	middlewares := []contracts.MagicalFunc{
-		container.NewMagicalFunc(func(user User, next contracts.Pipe) interface{} {
+		container.NewMagicalFunc(func(user User, next contracts.Pipe) any {
 			fmt.Println("中间件1-start")
 			result := next(user)
 			fmt.Println("中间件1-end", result)
 			return result
 		}),
-		container.NewMagicalFunc(func(user User, next contracts.Pipe) interface{} {
+		container.NewMagicalFunc(func(user User, next contracts.Pipe) any {
 			fmt.Println("中间件2-start")
 			result := next(user)
 			fmt.Println("中间件2-end", result)
@@ -127,20 +133,20 @@ func TestPurePipeline(t *testing.T) {
 	pipe := pipeline.Pure()
 	result := pipe.SendPure(User{Id: 1, Name: "goal"}).
 		ThroughPure(
-			func(user interface{}, next contracts.Pipe) interface{} {
+			func(user any, next contracts.Pipe) any {
 				fmt.Println("中间件1-start")
 				result := next(user)
 				fmt.Println("中间件1-end", result)
 				return result
 			},
-			func(user interface{}, next contracts.Pipe) interface{} {
+			func(user any, next contracts.Pipe) any {
 				fmt.Println("中间件2-start")
 				result := next(user)
 				fmt.Println("中间件2-end", result)
 				return result
 			},
 		).
-		ThenPure(func(user interface{}) interface{} {
+		ThenPure(func(user any) any {
 			fmt.Println("then", user)
 			return user.(User).Id
 		})
