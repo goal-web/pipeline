@@ -8,5 +8,4 @@ require (
 
 require (
 	github.com/apex/log v1.9.0 // indirect
-	github.com/goal-web/supports v0.3.0 // indirect
 )
