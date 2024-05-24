@@ -6,6 +6,7 @@ import (
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/pipeline"
 	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -56,7 +57,10 @@ func TestPipeline(t *testing.T) {
 // TestPipelineException 测试异常情况
 func TestPipelineException(t *testing.T) {
 	defer func() {
-		recover()
+		p := recover()
+		err, isError := p.(error)
+		assert.True(t, isError)
+		assert.Error(t, err)
 	}()
 	pipe := pipeline.New(container.New())
 	pipe.Send(User{Id: 1, Name: "goal"}).
